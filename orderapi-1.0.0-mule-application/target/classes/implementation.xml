@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:cassandra-db="http://www.mulesoft.org/schema/mule/cassandra-db" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd
+http://www.mulesoft.org/schema/mule/cassandra-db http://www.mulesoft.org/schema/mule/cassandra-db/current/mule-cassandra-db.xsd">
+	<flow name="getOrders" doc:id="ea13802a-1ce1-4deb-a357-28dadf9031fd" >
+		<set-variable value="SELECT * FROM orders" doc:name="Set Variable - queryString" doc:id="65ecef43-aa32-4632-aa5e-35f33e8d88d9" variableName="queryString"/>
+		<choice doc:name="Construct Query String" doc:id="a4cc4b13-a175-4e38-80d9-e6d4f3b423d0" tracking:enable-default-events="true">
+			<when expression='#[attributes.queryParams.customerNumber != null]'>
+				<set-variable value="#[%dw 2.0&#10;---&#10;vars.queryString++ ' WHERE customerNumber = ' ++ (attributes.queryParams.customerNumber default 0 as Number) as String]" doc:name="Set Variable - queryString - Add Filter" doc:id="67fa533c-5d59-43eb-989e-9b84ff36005e" variableName="queryString"/>
+			</when>
+		</choice>
+		<logger level="INFO" doc:name="Logger - Select Query" doc:id="29c139f1-f57e-4f2f-97d2-ec10b7e31c2d" message="#[vars.queryString]"/>
+		<db:select doc:id="ea0bff71-2a95-4296-83e5-08b0a07c8032" config-ref="Database_Config" doc:name="Select" >
+			<db:sql ><![CDATA[#[vars.queryString]]]></db:sql>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="806b02da-60eb-49ef-89de-ce841e6772aa" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>

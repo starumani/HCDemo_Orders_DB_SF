@@ -1,0 +1,21 @@
+http:
+  port: "8081"
+  
+https:
+  port: "8082"
+
+
+Database:
+  host: "cloud-services.demos.mulesoft.com"
+  port: "32682"
+  username: "sahitya8e7"
+  password: "MuleSoftMuleSoft_2024"
+  dbName: "demodb"
+  
+  
+Salesforce:
+  authURL: "https://login.Salesforce.com/services/Soap/u/57.0"
+  userName: "starumani@starumani-230519-898.demo"
+  password: "MuleSoft2023"
+  securityToken: "hugCbxBfYzdYubKuxA2zIVUnZ"
+  

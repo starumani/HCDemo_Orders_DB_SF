@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd">
+	<salesforce:sfdc-config name="Salesforce_Config" doc:name="Salesforce Config" doc:id="355fbbd3-350a-43ec-9d34-72a138da3469" >
+		<salesforce:basic-connection username="starumani@starumani-230519-898.demo" password="MuleSoft2023" securityToken="hugCbxBfYzdYubKuxA2zIVUnZ" url="https://login.Salesforce.com/services/Soap/u/57.0" />
+	</salesforce:sfdc-config>
+	<configuration-properties doc:name="Configuration properties" doc:id="36933629-82f9-4e72-8691-2858edc11249" file="config.yaml" />
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="6f8c2e8a-0477-41ca-afab-69424b98acd7" >
+		<db:my-sql-connection host="${Database.host}" port="${Database.port}" user="${Database.username}" password="${Database.password}" database="${Database.dbName}" />
+	</db:config>
+</mule>

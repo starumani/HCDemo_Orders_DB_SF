@@ -1,0 +1,4 @@
+%dw 2.0
+
+type auto_ea13802a_1ce1_4deb_a357_28dadf9031fd_Output_Payload = Array<{  orderNumber?: Number,   customerNumber?: Number,   orderDate?: String,   shippedDate?: String,   status?: String,   _?: Any}>
+

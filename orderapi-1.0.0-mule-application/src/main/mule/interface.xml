@@ -1,0 +1,253 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:s3="http://www.mulesoft.org/schema/mule/s3" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd  http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
+http://www.mulesoft.org/schema/mule/s3 http://www.mulesoft.org/schema/mule/s3/current/mule-s3.xsd">
+    <http:listener-config name="order-system-api-httpListenerConfig">
+        <http:listener-connection host="0.0.0.0" port="${http.port}" />
+    </http:listener-config>
+    <apikit:config name="order-system-api-config" api="resource::308a35b5-0cba-4d43-8848-9d130fcc0b5c:order-system-api:1.0.5:raml:zip:order-system-api.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+    <flow name="order-system-api-main">
+        <http:listener config-ref="order-system-api-httpListenerConfig" path="/api/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body>#[payload]</http:body>
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:router config-ref="order-system-api-config" />
+        <error-handler>
+            <on-error-propagate type="APIKIT:BAD_REQUEST">
+                <ee:transform doc:name="Transform Message">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Bad request"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">400</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform doc:name="Transform Message">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Resource not found"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">404</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:METHOD_NOT_ALLOWED">
+                <ee:transform doc:name="Transform Message">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Method not allowed"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">405</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_ACCEPTABLE">
+                <ee:transform doc:name="Transform Message">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Not acceptable"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">406</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:UNSUPPORTED_MEDIA_TYPE">
+                <ee:transform doc:name="Transform Message">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Unsupported media type"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">415</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_IMPLEMENTED">
+                <ee:transform doc:name="Transform Message">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Not Implemented"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">501</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="35ce78bb-c3a7-4214-8bfa-d69c2654ecd4" type="CUSTOM:NO_DATA">
+				<logger level="INFO" doc:name="Logger" doc:id="5a450389-c7d1-46e8-a4de-36e211fa9d67" message="ERROR MAIN!!"/>
+			</on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="order-system-api-console">
+        <http:listener config-ref="order-system-api-httpListenerConfig" path="/console/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body>#[payload]</http:body>
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:console config-ref="order-system-api-config" />
+        <error-handler>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform doc:name="Transform Message">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Resource not found"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">404</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="put:\orders\(id):application\json:order-system-api-config">
+        <ee:transform doc:name="Transform Message">
+            <ee:variables>
+                <ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+		<logger level="INFO" message="put:\orders\(id):application\json:order-system-api-config" />
+    </flow>
+    <flow name="get:\orders:order-system-api-config">
+        <logger level="INFO" message="get:\orders:order-system-api-config" />
+        <flow-ref doc:name="Get Orders Flow" doc:id="71185627-d913-4e09-a080-408414e9ad19" name="getOrders" />
+        <ee:transform doc:name="Transform Message" doc:id="20e1adba-8d8f-497b-9d1d-02dcad4553d7">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload map ( payload01 , indexOfPayload01 ) -> {
+	orderNumber: (payload01.orderNumber default 0) + (payload01.orderNumber default 0),
+	customerNumber: payload01.customerNumber,
+	orderDate: payload01.orderDate,
+	shippedDate: payload01.shippedDate,
+	status: payload01.status
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+    </flow>
+    <flow name="get:\orders\(id):order-system-api-config">
+        <ee:transform doc:name="Transform Message">
+            <ee:variables>
+                <ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <logger level="INFO" message="get:\orders\(id):order-system-api-config" />
+        <try doc:name="Try" doc:id="5f80961d-7316-4e9a-a843-beaecd32bb09" >
+			<db:select doc:name="Select" doc:id="865db633-5f39-4412-a85d-5957db8b47a8" config-ref="Database_Config">
+            <db:sql><![CDATA[SELECT * FROM orders WHERE orderNumber = :orderId]]></db:sql>
+            <db:input-parameters><![CDATA[#[{
+	"orderId" : vars.id
+}]]]></db:input-parameters>
+        </db:select>
+			<choice doc:name="Choice" doc:id="88e06dc5-106a-4f84-904e-f937249fd3a3">
+			<when expression="#[isEmpty(payload.orderNumber)]">
+				<raise-error doc:name="Raise error" doc:id="f2ffffeb-2150-4b12-a89f-b35510762e48" type="CUSTOM:NO_DATA" description="No Order found" />
+			</when>
+		</choice>
+			<error-handler >
+<!-- [STUDIO:"On Error Continue"]				<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="5808afa5-6f22-4c55-abdc-9fc62655f465" >
+				</on-error-continue> [STUDIO] -->
+				<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="fdef51fe-4487-4101-9dd6-98d9b48c2a38" type="CUSTOM:NO_DATA">
+					<logger level="INFO" doc:name="Logger" doc:id="c87e8fc6-74e9-4859-b937-850c3846328c" message="WHATTTTT?" />
+				</on-error-propagate>
+			</error-handler>
+		</try>
+		<ee:transform doc:name="Transform Message" doc:id="15a99567-7a23-4e19-9c79-9a64269635d1">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	orderNumber: payload[0].orderNumber,
+	customerNumber: payload[0].customerNumber,
+	orderDate: payload[0].orderDate,
+	shippedDate: payload[0].shippedDate,
+	status: payload[0].status
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+		<error-handler >
+<!-- [STUDIO:"On Error Continue"]			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="a7b15505-0446-4c0a-ac35-3064f9628b76" type="CUSTOM:NO_DATA">
+				<logger level="INFO" doc:name="Logger" doc:id="f7755004-7d49-4710-85dc-d67c5699004a" message="Error occured"/>
+			</on-error-continue> [STUDIO] -->
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="d3db8085-1207-4097-a5df-543a71797e7d" type="CUSTOM:NO_DATA">
+				<logger level="INFO" doc:name="Logger" doc:id="11cefa70-0f52-4b5f-8321-9e285c4afe67" message="ERROR!!!"/>
+			</on-error-propagate>
+		</error-handler>
+    </flow>
+	<flow name="post:\orders:application\json:order-system-api-config">
+        <logger level="INFO" message="post:\orders:application\json:order-system-api-config" />
+        <db:select doc:name="Select" doc:id="4b701f6d-e3b0-4a1a-a5e6-e1c3c0c0e1f4" target="lastOrderID" targetValue="#[payload[0].orderNumber as Number + 1]" config-ref="Database_Config">
+            <db:sql><![CDATA[SELECT orderNumber FROM orders ORDER BY orderNumber DESC LIMIT 1]]></db:sql>
+        </db:select>
+        <db:insert doc:name="Insert" doc:id="20cab1d1-ae85-4a19-a05c-47aa375306d6" config-ref="Database_Config">
+            <db:sql><![CDATA[INSERT INTO orders (orderNumber, customerNumber, orderDate, requiredDate, shippedDate, status ) values (:orderNumber, :customerNumber, CURDATE(), CURDATE(), CURDATE()+1, :status)]]></db:sql>
+            <db:input-parameters><![CDATA[#[{
+	orderNumber: vars.lastOrderID,
+	customerNumber: payload.customerNumber,
+	orderDate: payload.orderDate,
+	shippedDate: payload.shippedDate,
+	status: payload.status
+}]]]></db:input-parameters>
+        </db:insert>
+        <db:select doc:name="Select" doc:id="76ff6f60-8618-4251-88eb-230f01439a0f" config-ref="Database_Config">
+            <db:sql><![CDATA[SELECT * FROM orders ORDER BY orderNumber DESC LIMIT 1]]></db:sql>
+        </db:select>
+        <ee:transform doc:name="Transform Message" doc:id="aad7ac3f-e924-4266-9e43-d03b055b1b94">
+            <ee:message>
+                <ee:set-payload><![CDATA[output application/json
+---
+{
+	orderNumber: payload[0].orderNumber,
+	customerNumber: payload[0].customerNumber,
+	orderDate: payload[0].orderDate,
+	shippedDate: payload[0].shippedDate,
+	status: payload[0].status
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+        <salesforce:create type="Customer_Order__c" doc:name="Create" doc:id="9ee17b9d-d765-41cf-aae9-6e56abf274e2" config-ref="Salesforce_Config" target="sfOrder">
+            <salesforce:records><![CDATA[#[output application/java
+---
+[{
+	Order_Number__c: payload.orderNumber as Number,
+	Customer_Number__c: payload.customerNumber as Number ,
+	Status__c: payload.status as String,
+}]]]]></salesforce:records>
+        </salesforce:create>
+        <logger level="INFO" doc:name="Logger" doc:id="52989c49-6eb9-460d-91e5-58bc0b969513" message="#[vars.sfOrder.items.exception.localizedMessage]" />
+        <ee:transform doc:name="Transform Message" doc:id="2f9e3f10-eaa7-41d1-bae2-fbc172929a5d">
+            <ee:message>
+                <ee:set-payload><![CDATA[payload]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+    </flow>
+</mule>

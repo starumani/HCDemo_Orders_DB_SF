@@ -1,0 +1,29 @@
+%dw 2.0
+
+type auto_ea13802a_1ce1_4deb_a357_28dadf9031fd_Input_Attributes = {|
+  clientCertificate?: {|
+    publicKey?: {|  |}, 
+    "type"?: String, 
+    encoded?: Binary
+  |}, 
+  headers: {|  |}, 
+  listenerPath: String, 
+  method: String, 
+  queryParams: {|
+    orderNumber?: Number, 
+    customerNumber?: Number, 
+    status?: String, 
+    orderDate?: String, 
+    shippedDate?: String
+  |}, 
+  queryString: String, 
+  relativePath: String, 
+  remoteAddress: String, 
+  requestPath: String, 
+  requestUri: String, 
+  scheme: String, 
+  uriParams: {|  |}, 
+  version: String, 
+  localAddress: String
+|}
+
